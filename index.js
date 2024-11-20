@@ -2,7 +2,7 @@ require('dotenv').config();
 const db = require('./db/dbconnect.js');
 const express = require('express');
 const bodyparser = require('body-parser');
-const userRoutes = require('./routes/User.route.js');
+const userRoutes = require('./routes/user.Route.js');
 const menuRoutes = require('./routes/menu.route.js');
 const port =  process.env.PORT;
 const app = express();
