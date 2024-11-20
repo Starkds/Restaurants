@@ -46,6 +46,7 @@ router.put('/:menu_id',async (req,res) =>{
         return res.status(200).json({message:"item updated successfully"});
 
     } catch (error) {
+        console.log(error);
         return res.status(500).json({error:"internal server error"});
     }
 })
