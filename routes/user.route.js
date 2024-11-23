@@ -1,11 +1,9 @@
 const express = require("express");
 const User = require("../models/user.model.js");
+const {jwtAuthToken, generateToken} = require('../middleware/jwtAuth.middleware.js');
 const router = express.Router();
-const passport = require('../middleware/Auth.middleware.js');
-const localAuthMiddleware = passport.authenticate('local', {session:false});
 
-
-router.get("/getuserdetails",localAuthMiddleware, async (req, res) => {
+router.get("/getuserdetails",jwtAuthToken, async (req, res) => {
   try {
     const user = await User.find();
     console.log(user);
@@ -15,7 +13,23 @@ router.get("/getuserdetails",localAuthMiddleware, async (req, res) => {
   }
 });
 
-router.post("/postuserdetails", async (req, res) => {
+
+router.get("/userprofile", jwtAuthToken, async (req,res) =>{
+  try {
+    const userData = req.user;
+
+  console.log("user Data: ", userData);
+  const userId = userData.id;
+  const user = await User.findById(userId);
+
+  res.status(200).json({user});
+  } catch (error) {
+    res.status(500).json({error:"internal server error"});
+  } 
+
+})
+
+router.post("/signup", async (req, res) => {
   const { name, age, email, mobile, work, address, salary ,password, username } = req.body;
 
   try {
@@ -30,9 +44,17 @@ router.post("/postuserdetails", async (req, res) => {
       address,
       salary,
     });
-    console.log(user);
+    
+    const payload = {
+       username:user.username,
+       id : user.id,
+       password:user.password,
+    }
+     const token = generateToken(payload);
+   
+  
 
-    res.status(200).json({ message: "user created successfully", user });
+    res.status(200).json(user);
   } catch (error) {
     res
       .status(500)
@@ -40,7 +62,31 @@ router.post("/postuserdetails", async (req, res) => {
   }
 });
 
-router.get("/:work", localAuthMiddleware , async (req, res) => {
+
+router.post('/login', async (req , res) =>{
+  const {username , password}  = req.body;
+
+try {
+  const user = await User.findOne({username:username});
+
+  if(!user || !(await user.ComparePassword(password))){
+    return res.status(401).json({message:"Invalid username or password"});
+  }
+
+  const payload ={
+     id :user.id,
+     username:user.username,
+      }
+const token = generateToken(payload);
+ 
+ return res.status(200).json({message:"user logged in successfully", token:token});  
+} catch (error) {
+  throw error;
+}
+
+})
+
+router.get("/:work", async (req, res) => {
   const workType = req.params.work;
 
   try {
@@ -64,7 +110,9 @@ router.get("/:work", localAuthMiddleware , async (req, res) => {
   }
 });
 
-router.put("/:id", localAuthMiddleware,async (req, res) => {
+
+
+router.put("/:id",async (req, res) => {
   const person_id = req.params.id;
   const updatedData = req.body;
 
@@ -83,7 +131,7 @@ router.put("/:id", localAuthMiddleware,async (req, res) => {
   }
 });
 
-router.delete("/deleteuser/:id" ,localAuthMiddleware,async (req,res) =>{
+router.delete("/deleteuser/:id" ,async (req,res) =>{
   const userID  = req.params.id;
 
   try {
@@ -100,7 +148,7 @@ router.delete("/deleteuser/:id" ,localAuthMiddleware,async (req,res) =>{
 
 });
 
-router.delete("/delete/:email",localAuthMiddleware, async (req , res) => {
+router.delete("/delete/:email", async (req , res) => {
   const deletedUser=  req.params.email;
 
   try {
