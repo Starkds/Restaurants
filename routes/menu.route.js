@@ -29,7 +29,8 @@ try {
 } catch (error) {   
     return res.status(400).json({message:"something went wrong",error});
 }
-})
+})  
+
 
 
 router.put('/:menu_id',async (req,res) =>{
@@ -51,6 +52,23 @@ router.put('/:menu_id',async (req,res) =>{
     }
 })
 
+
+
+router.get('/:taste',async (req,res) =>{
+    const tasteitem = req.params.taste;
+    try {
+      if(tasteitem == "sweet" ||  tasteitem == 'spicy' || tasteitem == 'normal' || tasteitem == 'sour'){
+        const response = await Menu.find({taste: tasteitem});
+        console.log(response);
+        return res.status(200).json(response);
+    }
+
+} catch (error) {
+    console.log(response);
+  res.status(500).json({error:'internal server error' , error:error.message});    
+}
+ 
+})
 
 
 

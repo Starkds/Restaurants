@@ -1,9 +1,11 @@
 const express = require("express");
 const User = require("../models/user.model.js");
-
 const router = express.Router();
+const passport = require('../middleware/Auth.middleware.js');
+const localAuthMiddleware = passport.authenticate('local', {session:false});
 
-router.get("/getuserdetails", async (req, res) => {
+
+router.get("/getuserdetails",localAuthMiddleware, async (req, res) => {
   try {
     const user = await User.find();
     console.log(user);
@@ -14,12 +16,14 @@ router.get("/getuserdetails", async (req, res) => {
 });
 
 router.post("/postuserdetails", async (req, res) => {
-  const { name, age, email, mobile, work, address, salary } = req.body;
+  const { name, age, email, mobile, work, address, salary ,password, username } = req.body;
 
   try {
     const user = await User.create({
       name,
       age,
+      password,
+      username,
       email,
       mobile,
       work,
@@ -36,7 +40,7 @@ router.post("/postuserdetails", async (req, res) => {
   }
 });
 
-router.get("/:work", async (req, res) => {
+router.get("/:work", localAuthMiddleware , async (req, res) => {
   const workType = req.params.work;
 
   try {
@@ -60,7 +64,7 @@ router.get("/:work", async (req, res) => {
   }
 });
 
-router.put("/:id", async (req, res) => {
+router.put("/:id", localAuthMiddleware,async (req, res) => {
   const person_id = req.params.id;
   const updatedData = req.body;
 
@@ -79,12 +83,13 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-router.delete("/deleteuser/:id",async (req,res) =>{
+router.delete("/deleteuser/:id" ,localAuthMiddleware,async (req,res) =>{
   const userID  = req.params.id;
 
   try {
     const response = await  User.findByIdAndDelete(userID);
-  if(!response)  res.status(404).json({message:"user not found"});
+  if(!response)  res.status(404).json({
+    message:"user not found"});
     console.log(response);
 
     return res.status(200).json({message:"user deleted successfully"});
@@ -95,7 +100,7 @@ router.delete("/deleteuser/:id",async (req,res) =>{
 
 });
 
-router.delete("/delete/:email", async (req , res) => {
+router.delete("/delete/:email",localAuthMiddleware, async (req , res) => {
   const deletedUser=  req.params.email;
 
   try {
